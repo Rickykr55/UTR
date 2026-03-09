@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ UTR Verification with Processing</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 35px 25px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .header i {
+            font-size: 55px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 15px;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        /* Input Group */
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            color: var(--dark);
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 18px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 18px;
+            font-size: 20px;
+            letter-spacing: 3px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .input-group .status-icon {
+            position: absolute;
+            right: 15px;
+            bottom: 15px;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        /* Button */
+        .check-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .check-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .check-btn:active::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .check-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px -8px rgba(37, 99, 235, 0.5);
+        }
+
+        .check-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Processing Animation */
+        .processing {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .processing.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        .processing .spinner {
+            width: 70px;
+            height: 70px;
+            border: 6px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-right-color: var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .processing .timer {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 15px 0;
+            font-family: monospace;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .processing .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 30px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .processing .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 30px;
+            width: 0%;
+            transition: width 0.3s;
+            animation: progressPulse 1s ease infinite;
+        }
+
+        @keyframes progressPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .processing .dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .processing .dot {
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .processing .dot:nth-child(1) { animation-delay: -0.32s; }
+        .processing .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .processing .search-message {
+            font-size: 18px;
+            color: var(--dark);
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        /* Result Card */
+        .result-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            display: none;
+            animation: slideIn 0.3s;
+            border-left: 5px solid var(--primary);
+        }
+
+        .result-card.show {
+            display: block;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            transition: all 0.3s;
+        }
+
+        .result-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .result-item .icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .result-item .icon i {
+            color: white;
+            font-size: 20px;
+        }
+
+        .result-item .content {
+            flex: 1;
+            padding: 0;
+        }
+
+        .result-item .label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-item .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        /* Save Section */
+        .save-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px dashed #cbd5e1;
+            display: none;
+            animation: slideIn 0.3s;
+        }
+
+        .save-section.show {
+            display: block;
+        }
+
+        .save-section input {
+            width: 100%;
+            padding: 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 18px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .save-section input:focus {
+            border-color: var(--success);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            border: none;
+            border-radius: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px -8px rgba(16, 185, 129, 0.5);
+        }
+
+        .save-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Message */
+        .message {
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            animation: slideIn 0.3s;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 5px solid var(--success);
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 5px solid var(--danger);
+        }
+
+        .message.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 5px solid var(--primary);
+        }
+
+        .message.warning {
+            background: #fed7aa;
+            color: #92400e;
+            border-left: 5px solid var(--warning);
+        }
+
+        /* Recent List */
+        .recent-list {
+            margin-top: 25px;
+        }
+
+        .recent-list h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #475569;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .recent-items {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .recent-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dark);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .recent-item:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .processing .timer {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <i class="fas fa-clock"></i>
+            <h1>UTR Verification</h1>
+            <p>Processing takes 10-20 seconds if not found</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- UTR Input -->
+            <div class="input-group">
+                <label>
+                    <i class="fas fa-hashtag"></i>
+                    Enter 12-Digit UTR Number
+                </label>
+                <input type="text" id="utrInput" 
+                       placeholder="1234 5678 9012" 
+                       maxlength="12" 
+                       pattern="\d*"
+                       inputmode="numeric"
+                       autocomplete="off"
+                       autofocus>
+                <span class="status-icon" id="statusIcon">
+                    <i class="fas fa-qrcode" style="color: #94a3b8;"></i>
+                </span>
+            </div>
+
+            <!-- Check Button -->
+            <button class="check-btn" id="checkBtn">
+                <i class="fas fa-search"></i>
+                Verify UTR
+            </button>
+
+            <!-- Message Box -->
+            <div class="message" id="message"></div>
+
+            <!-- Processing Animation (10-20 seconds) -->
+            <div class="processing" id="processing">
+                <div class="spinner"></div>
+                
+                <div class="search-message">
+                    <i class="fas fa-magnifying-glass"></i>
+                    Searching Database...
+                </div>
+                
+                <div class="timer" id="timer">20s</div>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                
+                <div class="dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                
+                <p style="color: #64748b; margin-top: 15px;">
+                    <i class="fas fa-hourglass-half"></i>
+                    Please wait while we check...
+                </p>
+            </div>
+
+            <!-- Result Card (When UTR Found) -->
+            <div class="result-card" id="resultCard">
+                <div id="resultContent"></div>
+            </div>
+
+            <!-- Save Section (After 10-20 seconds if not found) -->
+            <div class="save-section" id="saveSection">
+                <input type="text" id="nameInput" placeholder="Enter full name">
+                <button class="save-btn" id="saveBtn">
+                    <i class="fas fa-save"></i>
+                    Save UTR to Database
+                </button>
+            </div>
+
+            <!-- Recent UTRs -->
+            <div class="recent-list">
+                <h4>
+                    <i class="fas fa-history"></i>
+                    Recently Verified
+                </h4>
+                <div class="recent-items" id="recentItems"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAwnD_POO-SoQymqDrtby0t2uC9Mvgau3Q",
+            authDomain: "utr-cc0a9.firebaseapp.com",
+            databaseURL: "https://utr-cc0a9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "utr-cc0a9",
+            storageBucket: "utr-cc0a9.firebasestorage.app",
+            messagingSenderId: "157513922891",
+            appId: "1:157513922891:web:c6e172e09fb1775a1fd0ce"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // DOM Elements
+        const utrInput = document.getElementById('utrInput');
+        const nameInput = document.getElementById('nameInput');
+        const checkBtn = document.getElementById('checkBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const statusIcon = document.getElementById('statusIcon');
+        const message = document.getElementById('message');
+        const processing = document.getElementById('processing');
+        const resultCard = document.getElementById('resultCard');
+        const resultContent = document.getElementById('resultContent');
+        const saveSection = document.getElementById('saveSection');
+        const timer = document.getElementById('timer');
+        const progressFill = document.getElementById('progressFill');
+        const recentItems = document.getElementById('recentItems');
+
+        // Variables
+        let processingTimer = null;
+        let remainingSeconds = 20;
+        let isChecking = false;
+        let currentUTR = '';
+        let cache = new Map();
+        let recentUTRs = JSON.parse(localStorage.getItem('recentUTRs') || '[]');
+
+        // Show Message
+        function showMessage(text, type) {
+            message.className = `message ${type}`;
+            message.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i> ${text}`;
+            message.style.display = 'flex';
+            
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 3000);
+        }
+
+        // Update Recent List
+        function updateRecentList() {
+            recentItems.innerHTML = recentUTRs.slice(0, 5).map(utr => 
+                `<span class="recent-item" onclick="useRecentUTR('${utr}')">${utr}</span>`
+            ).join('');
+        }
+
+        // Add to Recent
+        function addToRecent(utr) {
+            recentUTRs = [utr, ...recentUTRs.filter(u => u !== utr)].slice(0, 5);
+            localStorage.setItem('recentUTRs', JSON.stringify(recentUTRs));
+            updateRecentList();
+        }
+
+        // Use Recent UTR
+        window.useRecentUTR = (utr) => {
+            utrInput.value = utr;
+            checkUTR();
+        };
+
+        // Validate UTR
+        function validateUTR(utr) {
+            if (!utr) return 'Please enter UTR number';
+            if (utr.length !== 12) return 'UTR must be 12 digits';
+            if (!/^\d+$/.test(utr)) return 'Only numbers allowed';
+            return null;
+        }
+
+        // Format DateTime
+        function getCurrentDateTime() {
+            const now = new Date();
+            return {
+                date: now.toLocaleDateString('en-IN'),
+                time: now.toLocaleTimeString('en-IN'),
+                timestamp: now.toISOString()
+            };
+        }
+
+        // Display Result
+        function displayResult(data) {
+            resultContent.innerHTML = `
+                <div class="result-item">
+                    <div class="icon"><i class="fas fa-hashtag"></i></div>
+                    <div class="content">
+                        <div class="label">UTR NUMBER</div>
+                        <div class="value">${data.utr}</div>
+                    </div>
+                </div>
+                <div class="result-item">
+                    <div class="icon"><i class="fas fa-user"></i></div>
+                    <div class="content">
+                        <div class="label">NAME</div>
+                        <div class="value">${data.name || 'Not Available'}</div>
+                    </div>
+                </div>
+                <div class="result-item">
+                    <div class="icon"><i class="fas fa-calendar"></i></div>
+                    <div class="content">
+                        <div class="label">DATE</div>
+                        <div class="value">${data.date || 'N/A'}</div>
+                    </div>
+                </div>
+                <div class="result-item">
+                    <div class="icon"><i class="fas fa-clock"></i></div>
+                    <div class="content">
+                        <div class="label">TIME</div>
+                        <div class="value">${data.time || 'N/A'}</div>
+                    </div>
+                </div>
+            `;
+            resultCard.classList.add('show');
+        }
+
+        // Start Processing Timer (10-20 seconds)
+        function startProcessingTimer() {
+            remainingSeconds = 20; // 20 seconds processing
+            timer.textContent = `${remainingSeconds}s`;
+            progressFill.style.width = '0%';
+            
+            processingTimer = setInterval(() => {
+                remainingSeconds--;
+                timer.textContent = `${remainingSeconds}s`;
+                
+                // Update progress (100% at 0 seconds)
+                const progress = ((20 - remainingSeconds) / 20) * 100;
+                progressFill.style.width = `${progress}%`;
+                
+                if (remainingSeconds <= 0) {
+                    stopProcessingTimer();
+                    
+                    // After 20 seconds, if still no result, show save section
+                    if (!resultCard.classList.contains('show')) {
+                        processing.classList.remove('show');
+                        saveSection.classList.add('show');
+                        showMessage('UTR not found in database. You can save it now.', 'info');
+                    }
+                }
+            }, 1000);
+        }
+
+        // Stop Processing Timer
+        function stopProcessingTimer() {
+            if (processingTimer) {
+                clearInterval(processingTimer);
+                processingTimer = null;
+            }
+        }
+
+        // Reset UI
+        function resetUI() {
+            stopProcessingTimer();
+            processing.classList.remove('show');
+            resultCard.classList.remove('show');
+            saveSection.classList.remove('show');
+            message.style.display = 'none';
+        }
+
+        // Check UTR Function
+        async function checkUTR() {
+            const utr = utrInput.value.trim();
+            
+            // Validate
+            const error = validateUTR(utr);
+            if (error) {
+                statusIcon.innerHTML = '<i class="fas fa-times-circle" style="color: #ef4444;"></i>';
+                showMessage(error, 'error');
+                return;
+            }
+
+            // Check cache first
+            if (cache.has(utr)) {
+                displayResult(cache.get(utr));
+                saveSection.classList.remove('show');
+                showMessage('Found in cache! ⚡', 'success');
+                addToRecent(utr);
+                return;
+            }
+
+            // Start processing
+            resetUI();
+            currentUTR = utr;
+            statusIcon.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i>';
+            processing.classList.add('show');
+            startProcessingTimer();
+            
+            try {
+                // Check Firebase
+                const utrRef = ref(database, 'utrs/' + utr);
+                const snapshot = await get(utrRef);
+                
+                if (snapshot.exists()) {
+                    // Found in database
+                    const data = snapshot.val();
+                    cache.set(utr, data);
+                    
+                    // Stop timer and show result
+                    stopProcessingTimer();
+                    processing.classList.remove('show');
+                    displayResult(data);
+                    saveSection.classList.remove('show');
+                    showMessage('UTR found in database!', 'success');
+                    addToRecent(utr);
+                }
+                // If not found, timer will continue and show save section after 20 seconds
+                
+            } catch (error) {
+                console.error('Error:', error);
+                stopProcessingTimer();
+                processing.classList.remove('show');
+                showMessage('Error checking UTR', 'error');
+            }
+        }
+
+        // Save UTR Function
+        async function saveUTR() {
+            const utr = utrInput.value.trim();
+            const name = nameInput.value.trim();
+            
+            // Validate
+            const utrError = validateUTR(utr);
+            if (utrError) {
+                showMessage(utrError, 'error');
+                return;
+            }
+            
+            if (!name) {
+                showMessage('Please enter name', 'error');
+                return;
+            }
+
+            if (name.length < 2) {
+                showMessage('Name too short', 'error');
+                return;
+            }
+
+            // Show processing while saving
+            processing.classList.add('show');
+            timer.textContent = 'Saving...';
+            
+            try {
+                const utrRef = ref(database, 'utrs/' + utr);
+                const snapshot = await get(utrRef);
+                
+                if (snapshot.exists()) {
+                    processing.classList.remove('show');
+                    showMessage('UTR already exists!', 'warning');
+                    displayResult(snapshot.val());
+                    saveSection.classList.remove('show');
+                } else {
+                    const { date, time, timestamp } = getCurrentDateTime();
+                    const newData = { utr, name, date, time, timestamp };
+                    
+                    await set(utrRef, newData);
+                    cache.set(utr, newData);
+                    
+                    processing.classList.remove('show');
+                    displayResult(newData);
+                    saveSection.classList.remove('show');
+                    showMessage('UTR saved successfully! ⚡', 'success');
+                    addToRecent(utr);
+                }
+            } catch (error) {
+                processing.classList.remove('show');
+                showMessage('Error saving UTR', 'error');
+            }
+        }
+
+        // Event Listeners
+        checkBtn.addEventListener('click', checkUTR);
+        saveBtn.addEventListener('click', saveUTR);
+
+        // Input validation
+        utrInput.addEventListener('input', () => {
+            const utr = utrInput.value.trim();
+            if (utr.length === 12 && /^\d+$/.test(utr)) {
+                statusIcon.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i>';
+            } else if (utr.length > 0) {
+                statusIcon.innerHTML = '<i class="fas fa-times-circle" style="color: #ef4444;"></i>';
+            } else {
+                statusIcon.innerHTML = '<i class="fas fa-qrcode" style="color: #94a3b8;"></i>';
+            }
+        });
+
+        // Enter key
+        utrInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkUTR();
+            }
+        });
+
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveUTR();
+            }
+        });
+
+        // Initialize
+        updateRecentList();
+        utrInput.focus();
+
+        console.log('✅ System Ready with 20-second processing');
+    </script>
+</body>
+</html>
